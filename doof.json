@@ -1,0 +1,16 @@
+{
+  "name": "std/gzip",
+  "version": "0.1.0",
+  "license": "ISC",
+  "build": {
+    "native": {
+      "extraCopyPaths": [
+        "./native_gzip.hpp"
+      ],
+      "linkLibraries": [
+        "z"
+      ]
+    }
+  },
+  "dependencies": {}
+}
