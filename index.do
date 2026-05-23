@@ -3,6 +3,12 @@ import class NativeGzipStream from "native_gzip.hpp" as doof_gzip::NativeGzipStr
   next(): readonly byte[] | null
 }
 
+import class NativeGzipEncoder from "native_gzip.hpp" as doof_gzip::NativeGzipEncoder {
+  static create(): NativeGzipEncoder
+  update(data: readonly byte[]): readonly byte[]
+  finish(): readonly byte[]
+}
+
 export import function gzip(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::gzip
 
 function normalizeBlockSize(blockSize: int): int {
@@ -14,23 +20,45 @@ function normalizeBlockSize(blockSize: int): int {
 }
 
 export class GzipStream implements Stream<readonly byte[]> {
-  private native: NativeGzipStream
+  source: Stream<readonly byte[]>
+  private native: NativeGzipEncoder
   private currentValue: readonly byte[] = []
+  private sourceDone: bool = false
+  private finished: bool = false
 
-  static constructor(data: readonly byte[], blockSize: int = 65536): GzipStream {
+  static constructor(source: Stream<readonly byte[]>): GzipStream {
     return GzipStream {
-      native: NativeGzipStream(data, normalizeBlockSize(blockSize)),
+      source,
+      native: NativeGzipEncoder.create(),
     }
   }
 
   next(): bool {
-    chunk := this.native.next()
-    if chunk == null {
-      return false
-    }
+    while true {
+      if !this.sourceDone {
+        if this.source.next() {
+          compressed := this.native.update(this.source.value())
+          if compressed.length > 0 {
+            this.currentValue = compressed
+            return true
+          }
+          continue
+        }
+        this.sourceDone = true
+      }
 
-    this.currentValue = chunk!
-    return true
+      if this.finished {
+        return false
+      }
+
+      this.finished = true
+      finalChunk := this.native.finish()
+      if finalChunk.length == 0 {
+        return false
+      }
+      this.currentValue = finalChunk
+      return true
+    }
   }
 
   value(): readonly byte[] => this.currentValue

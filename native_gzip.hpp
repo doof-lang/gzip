@@ -3,6 +3,7 @@
 #include "doof_runtime.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -119,6 +120,98 @@ private:
     bool initialized_ = false;
     bool inputLoaded_ = false;
     bool done_ = false;
+};
+
+class NativeGzipEncoder {
+public:
+    static std::shared_ptr<NativeGzipEncoder> create() {
+        return std::shared_ptr<NativeGzipEncoder>(new NativeGzipEncoder());
+    }
+
+    ~NativeGzipEncoder() {
+        if (initialized_) {
+            deflateEnd(&stream_);
+        }
+    }
+
+    std::shared_ptr<std::vector<uint8_t>> update(const std::shared_ptr<std::vector<uint8_t>>& data) {
+        if (finished_) {
+            doof::panic("gzip encoder update after finish");
+        }
+
+        const auto safeData = data ? data : std::make_shared<std::vector<uint8_t>>();
+        if (safeData->empty()) {
+            return std::make_shared<std::vector<uint8_t>>();
+        }
+
+        stream_.next_in = const_cast<Bytef*>(reinterpret_cast<const Bytef*>(safeData->data()));
+        stream_.avail_in = static_cast<uInt>(std::min(
+            safeData->size(),
+            static_cast<size_t>(std::numeric_limits<uInt>::max())
+        ));
+        return drain(Z_NO_FLUSH);
+    }
+
+    std::shared_ptr<std::vector<uint8_t>> finish() {
+        if (finished_) {
+            return std::make_shared<std::vector<uint8_t>>();
+        }
+
+        finished_ = true;
+        stream_.next_in = nullptr;
+        stream_.avail_in = 0;
+        return drain(Z_FINISH);
+    }
+
+private:
+    NativeGzipEncoder() {
+        std::memset(&stream_, 0, sizeof(stream_));
+        const int result = deflateInit2(
+            &stream_,
+            Z_DEFAULT_COMPRESSION,
+            Z_DEFLATED,
+            MAX_WBITS + 16,
+            8,
+            Z_DEFAULT_STRATEGY
+        );
+        if (result != Z_OK) {
+            panicZlibFailure("initialize", result, stream_);
+        }
+        initialized_ = true;
+    }
+
+    std::shared_ptr<std::vector<uint8_t>> drain(int flush) {
+        auto output = std::make_shared<std::vector<uint8_t>>();
+        std::array<uint8_t, 65536> buffer {};
+
+        while (true) {
+            stream_.next_out = buffer.data();
+            stream_.avail_out = static_cast<uInt>(buffer.size());
+
+            const int result = deflate(&stream_, flush);
+            if (result == Z_STREAM_END) {
+                const size_t produced = buffer.size() - static_cast<size_t>(stream_.avail_out);
+                output->insert(output->end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
+                break;
+            }
+            if (result != Z_OK) {
+                panicZlibFailure("deflate", result, stream_);
+            }
+
+            const size_t produced = buffer.size() - static_cast<size_t>(stream_.avail_out);
+            output->insert(output->end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
+
+            if (stream_.avail_in == 0 && stream_.avail_out > 0) {
+                break;
+            }
+        }
+
+        return output;
+    }
+
+    z_stream stream_;
+    bool initialized_ = false;
+    bool finished_ = false;
 };
 
 inline std::shared_ptr<std::vector<uint8_t>> gzip(const std::shared_ptr<std::vector<uint8_t>>& data) {

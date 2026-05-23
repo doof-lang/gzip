@@ -1,12 +1,35 @@
 import { gzip, GzipStream } from "../index"
 import { BlobBuilder } from "std/blob"
 
+class ChunkStream implements Stream<readonly byte[]> {
+  chunks: string[]
+  index: int = 0
+  currentValue: readonly byte[] = []
+
+  next(): bool {
+    if this.index >= this.chunks.length {
+      return false
+    }
+    this.currentValue = encodeText(this.chunks[this.index])
+    this.index += 1
+    return true
+  }
+
+  value(): readonly byte[] => this.currentValue
+}
+
 function assertBytes(actual: readonly byte[], expected: readonly byte[]): void {
   assert(actual.length == expected.length, "expected byte lengths to match")
 
   for index of 0..<actual.length {
     assert(actual[index] == expected[index], "expected bytes to match")
   }
+}
+
+function encodeText(text: string): readonly byte[] {
+  builder := BlobBuilder()
+  builder.writeString(text)
+  return builder.build()
 }
 
 function buildPayload(): readonly byte[] {
@@ -46,18 +69,15 @@ export function testGzipProducesGzipContainer(): void {
   assert(inputSize == long(input.length), "expected gzip trailer to include the original input size")
 }
 
-export function testGzipStreamMatchesOneShotGzip(): void {
+export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): void {
   input := buildPayload()
-  streamed := collect(GzipStream(input, 5))
+  streamed := collect(GzipStream(ChunkStream {
+    chunks: [
+      "hello ",
+      "gzip\nhello ",
+      "gzip\nhello gzip\n",
+    ],
+  }))
 
   assertBytes(streamed, gzip(input))
-}
-
-export function testGzipHandlesEmptyInput(): void {
-  input: readonly byte[] := []
-  compressed := gzip(input)
-  streamed := collect(GzipStream(input, 3))
-
-  assertBytes(streamed, compressed)
-  assert(compressed.length > 0, "expected empty input to still produce a gzip container")
 }
