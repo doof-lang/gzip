@@ -227,4 +227,65 @@ inline std::shared_ptr<std::vector<uint8_t>> gzip(const std::shared_ptr<std::vec
     }
 }
 
+inline doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string> gunzip(
+    const std::shared_ptr<std::vector<uint8_t>>& data
+) {
+    if (!data || data->empty()) {
+        return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
+            "gzip decompress failed: empty input"
+        );
+    }
+
+    z_stream stream {};
+    const int initialized = inflateInit2(&stream, MAX_WBITS + 16);
+    if (initialized != Z_OK) {
+        return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
+            "gzip decompress failed to initialize with zlib code " + std::to_string(initialized)
+        );
+    }
+
+    struct InflateEnd {
+        z_stream* stream;
+        ~InflateEnd() { inflateEnd(stream); }
+    } cleanup { &stream };
+
+    stream.next_in = const_cast<Bytef*>(reinterpret_cast<const Bytef*>(data->data()));
+    stream.avail_in = static_cast<uInt>(std::min(
+        data->size(),
+        static_cast<size_t>(std::numeric_limits<uInt>::max())
+    ));
+
+    auto output = std::make_shared<std::vector<uint8_t>>();
+    std::array<uint8_t, 65536> buffer {};
+
+    while (true) {
+        stream.next_out = buffer.data();
+        stream.avail_out = static_cast<uInt>(buffer.size());
+
+        const int result = inflate(&stream, Z_NO_FLUSH);
+        const size_t produced = buffer.size() - static_cast<size_t>(stream.avail_out);
+        output->insert(output->end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
+
+        if (result == Z_STREAM_END) {
+            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::success(output);
+        }
+        if (result != Z_OK) {
+            std::string message = "gzip decompress failed";
+            if (stream.msg != nullptr) {
+                message += ": ";
+                message += stream.msg;
+            } else {
+                message += " with zlib code ";
+                message += std::to_string(result);
+            }
+            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(message);
+        }
+        if (stream.avail_in == 0 && produced == 0) {
+            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
+                "gzip decompress failed: truncated input"
+            );
+        }
+    }
+}
+
 }  // namespace doof_gzip

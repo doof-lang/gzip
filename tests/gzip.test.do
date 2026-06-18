@@ -1,4 +1,4 @@
-import { gzip, GzipStream } from "../index"
+import { gunzip, gzip, GzipStream } from "../index"
 import { BlobBuilder } from "std/blob"
 
 class ChunkStream implements Stream<readonly byte[]> {
@@ -80,4 +80,20 @@ export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): void {
   }))
 
   assertBytes(streamed, gzip(input))
+}
+
+export function testGunzipRoundTripsOneShotGzip(): void {
+  input := buildPayload()
+  decompressed := try! gunzip(gzip(input))
+
+  assertBytes(decompressed, input)
+}
+
+export function testGunzipRejectsInvalidAndTruncatedInput(): void {
+  invalid := gunzip(encodeText("not gzip"))
+  compressed := gzip(buildPayload())
+  truncated := gunzip(compressed.slice(0, compressed.length - 4))
+
+  assert(invalid.isFailure(), "expected invalid gzip input to fail")
+  assert(truncated.isFailure(), "expected truncated gzip input to fail")
 }

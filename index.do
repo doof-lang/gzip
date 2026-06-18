@@ -10,6 +10,7 @@ import class NativeGzipEncoder from "native_gzip.hpp" as doof_gzip::NativeGzipEn
 }
 
 export import function gzip(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::gzip
+export import function gunzip(data: readonly byte[]): Result<readonly byte[], string> from "native_gzip.hpp" as doof_gzip::gunzip
 
 function normalizeBlockSize(blockSize: int): int {
   if blockSize > 0 {
