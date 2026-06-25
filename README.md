@@ -2,6 +2,11 @@
 
 Gzip compression and decompression utilities for byte arrays and byte streams.
 
+## Documentation
+
+- [Guide and API reference](docs/API.md) covers one-shot compression, streaming compression, invalid input, and exported helpers.
+- Tests can be run with `doof test gzip`.
+
 ## Usage
 
 ```doof
