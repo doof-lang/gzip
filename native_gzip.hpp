@@ -231,17 +231,13 @@ inline doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string> gunzip(
     const std::shared_ptr<std::vector<uint8_t>>& data
 ) {
     if (!data || data->empty()) {
-        return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
-            "gzip decompress failed: empty input"
-        );
+        return doof::Failure<std::string>{"gzip decompress failed: empty input"};
     }
 
     z_stream stream {};
     const int initialized = inflateInit2(&stream, MAX_WBITS + 16);
     if (initialized != Z_OK) {
-        return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
-            "gzip decompress failed to initialize with zlib code " + std::to_string(initialized)
-        );
+        return doof::Failure<std::string>{"gzip decompress failed to initialize with zlib code " + std::to_string(initialized)};
     }
 
     struct InflateEnd {
@@ -267,7 +263,7 @@ inline doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string> gunzip(
         output->insert(output->end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
 
         if (result == Z_STREAM_END) {
-            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::success(output);
+            return doof::Success<std::shared_ptr<std::vector<uint8_t>>>{output};
         }
         if (result != Z_OK) {
             std::string message = "gzip decompress failed";
@@ -278,12 +274,10 @@ inline doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string> gunzip(
                 message += " with zlib code ";
                 message += std::to_string(result);
             }
-            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(message);
+            return doof::Failure<std::string>{message};
         }
         if (stream.avail_in == 0 && produced == 0) {
-            return doof::Result<std::shared_ptr<std::vector<uint8_t>>, std::string>::failure(
-                "gzip decompress failed: truncated input"
-            );
+            return doof::Failure<std::string>{"gzip decompress failed: truncated input"};
         }
     }
 }
