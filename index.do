@@ -1,16 +1,16 @@
 import class NativeGzipStream from "native_gzip.hpp" as doof_gzip::NativeGzipStream {
-  static constructor(data: readonly byte[], blockSize: int): NativeGzipStream
-  next(): readonly byte[] | null
+  isolated static constructor(data: readonly byte[], blockSize: int): NativeGzipStream
+  isolated next(): readonly byte[] | null
 }
 
 import class NativeGzipEncoder from "native_gzip.hpp" as doof_gzip::NativeGzipEncoder {
-  static create(): NativeGzipEncoder
-  update(data: readonly byte[]): readonly byte[]
-  finish(): readonly byte[]
+  isolated static create(): NativeGzipEncoder
+  isolated update(data: readonly byte[]): readonly byte[]
+  isolated finish(): readonly byte[]
 }
 
-export import function gzip(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::gzip
-export import function gunzip(data: readonly byte[]): Result<readonly byte[], string> from "native_gzip.hpp" as doof_gzip::gunzip
+export import isolated function gzip(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::gzip
+export import isolated function gunzip(data: readonly byte[]): Result<readonly byte[], string> from "native_gzip.hpp" as doof_gzip::gunzip
 
 function normalizeBlockSize(blockSize: int): int {
   if blockSize > 0 {
