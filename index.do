@@ -1,6 +1,6 @@
 import class NativeGzipStream from "native_gzip.hpp" as doof_gzip::NativeGzipStream {
   isolated static constructor(data: readonly byte[], blockSize: int): NativeGzipStream
-  isolated next(): readonly byte[] | null
+  isolated next(): readonly byte[] | none
 }
 
 import class NativeGzipEncoder from "native_gzip.hpp" as doof_gzip::NativeGzipEncoder {

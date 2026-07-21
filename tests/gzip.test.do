@@ -18,7 +18,7 @@ class ChunkStream implements Stream<readonly byte[]> {
   value(): readonly byte[] => this.currentValue
 }
 
-function assertBytes(actual: readonly byte[], expected: readonly byte[]): void {
+function assertBytes(actual: readonly byte[], expected: readonly byte[]): none {
   assert(actual.length == expected.length, "expected byte lengths to match")
 
   for index of 0..<actual.length {
@@ -55,7 +55,7 @@ function readLittleEndianInt(data: readonly byte[], start: int): long {
     (long(data[start + 3]) << 24)
 }
 
-export function testGzipProducesGzipContainer(): void {
+export function testGzipProducesGzipContainer(): none {
   input := buildPayload()
   compressed := gzip(input)
 
@@ -69,7 +69,7 @@ export function testGzipProducesGzipContainer(): void {
   assert(inputSize == long(input.length), "expected gzip trailer to include the original input size")
 }
 
-export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): void {
+export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): none {
   input := buildPayload()
   streamed := collect(GzipStream(ChunkStream {
     chunks: [
@@ -82,14 +82,14 @@ export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): void {
   assertBytes(streamed, gzip(input))
 }
 
-export function testGunzipRoundTripsOneShotGzip(): void {
+export function testGunzipRoundTripsOneShotGzip(): none {
   input := buildPayload()
   decompressed := try! gunzip(gzip(input))
 
   assertBytes(decompressed, input)
 }
 
-export function testGunzipRejectsInvalidAndTruncatedInput(): void {
+export function testGunzipRejectsInvalidAndTruncatedInput(): none {
   invalid := gunzip(encodeText("not gzip"))
   compressed := gzip(buildPayload())
   truncated := gunzip(compressed.slice(0, compressed.length - 4))
