@@ -3,8 +3,8 @@ import { BlobBuilder } from "std/blob"
 
 class ChunkStream implements Stream<readonly byte[]> {
   chunks: string[]
-  index: int = 0
-  currentValue: readonly byte[] = []
+  let index: int = 0
+  let currentValue: readonly byte[] = []
 
   next(): bool {
     if this.index >= this.chunks.length {

@@ -23,9 +23,9 @@ function normalizeBlockSize(blockSize: int): int {
 export class GzipStream implements Stream<readonly byte[]> {
   source: Stream<readonly byte[]>
   private native: NativeGzipEncoder
-  private currentValue: readonly byte[] = []
-  private sourceDone: bool = false
-  private finished: bool = false
+  private let currentValue: readonly byte[] = []
+  private let sourceDone: bool = false
+  private let finished: bool = false
 
   static constructor(source: Stream<readonly byte[]>): GzipStream {
     return GzipStream {
