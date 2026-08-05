@@ -1,4 +1,4 @@
-import { gunzip, gzip, GzipStream } from "../index"
+import { crc32, deflateRaw, gunzip, gzip, GzipStream, inflateRaw } from "../index"
 import { BlobBuilder } from "std/blob"
 
 class ChunkStream implements Stream<readonly byte[]> {
@@ -87,6 +87,12 @@ export function testGunzipRoundTripsOneShotGzip(): none {
   decompressed := try! gunzip(gzip(input))
 
   assertBytes(decompressed, input)
+}
+
+export function testRawDeflateAndCrcInterfaces(): none {
+  input := buildPayload()
+  assertBytes(try! inflateRaw(deflateRaw(input)), input)
+  assert(crc32(encodeText("123456789")) == 3421780262L, "expected standard CRC-32 check value")
 }
 
 export function testGunzipRejectsInvalidAndTruncatedInput(): none {

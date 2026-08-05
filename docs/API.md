@@ -1,6 +1,8 @@
 # std/gzip Guide
 
-`std/gzip` compresses and decompresses gzip container payloads. Use the
+`std/gzip` compresses and decompresses gzip container payloads. It owns the
+shared zlib native dependency and exports raw deflate/inflate and CRC-32
+primitives for lower-level format packages such as `std/archive`. Use the
 one-shot helpers when the whole payload is already in memory, and use
 `GzipStream` when you already have data as a `Stream<readonly byte[]>` and want
 to compress it incrementally.
@@ -51,6 +53,31 @@ export import function gzip(data: readonly byte[]): readonly byte[]
 Compress a complete byte array and return a complete gzip payload.
 
 Defined in [index.do](../index.do).
+
+### `deflateRaw`
+
+```doof
+export import function deflateRaw(data: readonly byte[]): readonly byte[]
+```
+
+Compress bytes using raw deflate, without a zlib or gzip wrapper.
+
+### `inflateRaw`
+
+```doof
+export import function inflateRaw(data: readonly byte[]): Result<readonly byte[], string>
+```
+
+Decompress raw deflate bytes and return `Failure` for malformed or truncated
+input.
+
+### `crc32`
+
+```doof
+export import function crc32(data: readonly byte[]): long
+```
+
+Calculate the standard CRC-32 checksum.
 
 ### `gunzip`
 

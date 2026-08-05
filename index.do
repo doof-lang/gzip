@@ -11,6 +11,9 @@ import class NativeGzipEncoder from "native_gzip.hpp" as doof_gzip::NativeGzipEn
 
 export import isolated function gzip(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::gzip
 export import isolated function gunzip(data: readonly byte[]): Result<readonly byte[], string> from "native_gzip.hpp" as doof_gzip::gunzip
+export import isolated function deflateRaw(data: readonly byte[]): readonly byte[] from "native_gzip.hpp" as doof_gzip::deflateRaw
+export import isolated function inflateRaw(data: readonly byte[]): Result<readonly byte[], string> from "native_gzip.hpp" as doof_gzip::inflateRaw
+export import isolated function crc32(data: readonly byte[]): long from "native_gzip.hpp" as doof_gzip::crc32Bytes
 
 function normalizeBlockSize(blockSize: int): int {
   if blockSize > 0 {
