@@ -8,7 +8,7 @@
       "destination": "vendor/zlib",
       "sha256": "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16",
       "stripComponents": 1,
-      "keep": ["adler32.c", "crc32.c", "deflate.c", "inffast.c", "inflate.c", "inftrees.c", "trees.c", "zutil.c", "crc32.h", "deflate.h", "gzguts.h", "inffast.h", "inffixed.h", "inflate.h", "inftrees.h", "zconf.h", "zlib.h", "zutil.h", "LICENSE", "README"]
+      "keep": ["adler32.c", "crc32.c", "deflate.c", "inffast.c", "inflate.c", "inftrees.c", "trees.c", "zutil.c", "crc32.h", "deflate.h", "gzguts.h", "inffast.h", "inffixed.h", "inflate.h", "inftrees.h", "trees.h", "zconf.h", "zlib.h", "zutil.h", "LICENSE", "README"]
     }
   ]
 }
