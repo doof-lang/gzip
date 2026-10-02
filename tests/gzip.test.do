@@ -84,14 +84,14 @@ export function testGzipStreamFromSourceStreamMatchesOneShotGzip(): none {
 
 export function testGunzipRoundTripsOneShotGzip(): none {
   input := buildPayload()
-  decompressed := try! gunzip(gzip(input))
+  decompressed := gunzip(gzip(input))!
 
   assertBytes(decompressed, input)
 }
 
 export function testRawDeflateAndCrcInterfaces(): none {
   input := buildPayload()
-  assertBytes(try! inflateRaw(deflateRaw(input)), input)
+  assertBytes(inflateRaw(deflateRaw(input))!, input)
   assert(crc32(encodeText("123456789")) == 3421780262L, "expected standard CRC-32 check value")
 }
 
