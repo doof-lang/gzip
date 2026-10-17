@@ -16,7 +16,7 @@ encoding helper before compression, and decode after decompression.
 import { GzipStream, gunzip, gzip } from "std/gzip"
 
 compressed := gzip(bytes)
-original := try! gunzip(compressed)
+original := gunzip(compressed)!
 
 for chunk of GzipStream(sourceChunks) {
   // write each compressed chunk to a file, socket, or another stream sink

@@ -15,7 +15,7 @@ deflate/inflate and CRC-32 primitives for packages such as `std/archive`.
 import { GzipStream, gunzip, gzip } from "std/gzip"
 
 compressed := gzip(bytes)
-original := try! gunzip(compressed)
+original := gunzip(compressed)!
 
 compressedChunks := GzipStream(chunks)
 ```
